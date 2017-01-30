@@ -109,6 +109,13 @@ function drawStopStartCircle(instrument, isStart, callback) {
         return;
     }
 
+    var endPercent = 100;
+    var curPerc = 0;
+    var circ = Math.PI * 2;
+    var quart = Math.PI / 2;
+    var cancelAnimation = false;
+    var requestId;
+
     var instrumentArea = $("map area." + instrument);
     var coordStr = instrumentArea.attr('coords');
     var mCoords = coordStr.split(',');
@@ -117,48 +124,16 @@ function drawStopStartCircle(instrument, isStart, callback) {
     centerY = mCoords[1];
     radius = mCoords[2];
 
-    if (isStart) {
-        if (instrumentArea.hasClass("start")) //already started
-            return;
-        instrumentArea.removeClass("stop").addClass("start");
-        instrumentArea.click(function () {
-            if (!instrumentArea.hasClass("start")) //already stopped
-                return;
-            instrumentArea.removeClass("start");
-            eraseCircle();
-            callback();
-            console.log("start pressed " + instrument);
-        });
+    function alreadyStarted() {
+        return instrumentArea.hasClass("start");
+    }
 
-        setTimeout(function () {
-            if (!instrumentArea.hasClass("start")) //already stopped
-                return;
-            instrumentArea.removeClass("start");
-            eraseCircle();
-        }, 3000);
-
-    } else {
-        if (instrumentArea.hasClass("stop")) //already stopped
-            return;
-        instrumentArea.removeClass("start").addClass("stop");
-        instrumentArea.click(function () {
-            if (!instrumentArea.hasClass("stop")) //already started
-                return;
-            instrumentArea.removeClass("stop")
-            eraseCircle();
-            callback();
-            console.log("stop pressed " + instrument);
-        })
-
-        setTimeout(function () {
-            if (!instrumentArea.hasClass("stop")) //already started
-                return;
-            instrumentArea.removeClass("stop")
-            eraseCircle();
-        }, 3000);
+    function alreadyStopped() {
+        return instrumentArea.hasClass("stop");
     }
 
     function eraseCircle() {
+        cancelAnimation = true;
 //now, erase the arc by clearing a rectangle that's slightly larger than the arc
         hdc.beginPath();
         hdc.clearRect(centerX - radius - 3, centerY - radius - 3, radius * 2 + 5, radius * 2 + 5);
@@ -166,15 +141,98 @@ function drawStopStartCircle(instrument, isStart, callback) {
     }
 
     eraseCircle();
+    cancelAnimation = false;
 
-    // draw the colored region
-    hdc.beginPath();
-    hdc.arc(centerX, centerY, radius, 0, 2 * Math.PI, true);
-    hdc.fillStyle = isStart ? 'rgba(226, 255, 198, 0.5)' : 'rgba(255, 106, 106, 0.5)';
-    hdc.fill();
+    console.log("instrument: " + instrument + " isStart: " + isStart + " classes:" + instrumentArea.attr("class"));
 
-    // draw the stroke
-    //hdc.lineWidth = 5;
-    hdc.strokeStyle = isStart ? "#66CC01" : '#FF0000';
-    hdc.stroke();
+    if (isStart) {
+        if (alreadyStarted()) {
+            return;
+        }
+        instrumentArea.removeClass("stop").addClass("start");
+        instrumentArea.click(function () {
+            if (!alreadyStarted()) {
+                cancelAnimation = true;
+                return;
+            }
+            instrumentArea.removeClass("start");
+            drawMusicNote();
+            callback(true);
+        });
+
+        setTimeout(function () {
+            if (!alreadyStarted()) {//already stopped
+                cancelAnimation = true;
+                return;
+            }
+            instrumentArea.removeClass("start");
+            eraseCircle();
+        }, 4000);
+
+    } else {
+        if (alreadyStopped()) {
+            return;
+        }
+        instrumentArea.removeClass("start").addClass("stop");
+        instrumentArea.click(function () {
+            if (!alreadyStopped()) {
+                cancelAnimation = true;
+                return;
+            }
+            instrumentArea.removeClass("stop")
+            eraseCircle();
+            callback(true);
+        })
+
+        setTimeout(function () {
+            if (!alreadyStopped()) {
+                cancelAnimation = true;
+                return;
+            }
+            instrumentArea.removeClass("stop");
+            eraseCircle();
+            callback(false);
+        }, 4000);
+    }
+
+    function animate(current) {
+        if (cancelAnimation) {
+            window.cancelAnimationFrame(requestId);
+            console.log("instrument: " + instrument + " cancel circle animation requestId:" + requestId)
+            return false;
+        }
+
+        //eraseCircle();
+        hdc.shadowOffsetX = 0;
+        hdc.shadowOffsetY = 0;
+        hdc.strokeStyle = isStart ? "#66CC01" : '#FF0000';
+        hdc.beginPath();
+        hdc.arc(centerX, centerY, radius, -(quart), ((circ) * current) - quart, false);
+        hdc.stroke();
+
+        curPerc += 2;
+        if (curPerc <= endPercent) {
+            requestId = requestAnimationFrame(function () {
+                animate(curPerc / 100)
+            });
+        } else {
+            hdc.fillStyle = isStart ? 'rgba(226, 255, 198, 0.5)' : 'rgba(255, 106, 106, 0.5)';
+            hdc.fill();
+        }
+    }
+
+    function drawCircle() {
+        animate();
+    }
+
+    function drawMusicNote() {
+        base_image = new Image();
+        base_image.src = 'media/image/music_note_3.png';
+        base_image.onload = function () {
+            eraseCircle();
+            hdc.drawImage(base_image, centerX - radius / 2, centerY - radius / 2, radius, radius);
+        }
+    }
+
+    drawCircle();
 }

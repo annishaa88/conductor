@@ -61,6 +61,34 @@ var songListJson = {
                     composer: "Bach"
                 }
             ]
+        },
+        {
+            name: "Medium",
+            songs: [
+                {
+                    id: 11,
+                    name: "Adagio",
+                    composer: "Mozart"
+                }, {
+                    id: 21,
+                    name: "Adagio2",
+                    composer: "Mozart"
+                }
+            ]
+        },
+        {
+            name: "Hard",
+            songs: [
+                {
+                    id: 13,
+                    name: "Adagio",
+                    composer: "Bach & Mozart"
+                }, {
+                    id: 23,
+                    name: "Adagio2",
+                    composer: "Bach & Mozart"
+                }
+            ]
         }
     ]
 }

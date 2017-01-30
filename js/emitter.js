@@ -123,9 +123,11 @@ SongPlaylist.prototype.addEventEmitter = function () {
         if (btnMute.hasClass("active")) { //already muted
             return;
         }
-        drawStopStartCircle(value.name, false, function () {
+        drawStopStartCircle(value.name, false, function (addPoints) {
             btnMute.click();
-            songPointsModel.addPoints();
+            if (addPoints) {
+                songPointsModel.addPoints();
+            }
             songAlertModel.addAlert(value.name + ": stopped (" + audioPos + ")");
         });
     }
@@ -135,9 +137,11 @@ SongPlaylist.prototype.addEventEmitter = function () {
         if (!btnMute.hasClass("active")) { //already playing
             return;
         }
-        drawStopStartCircle(value.name, true, function () {
+        drawStopStartCircle(value.name, true, function (addPoints) {
             btnMute.click();
-            songPointsModel.addPoints();
+            if (addPoints) {
+                songPointsModel.addPoints();
+            }
             songAlertModel.addAlert(value.name + ": started (" + audioPos + ")");
         });
     }
@@ -316,6 +320,7 @@ SongPlaylist.prototype.addEventEmitter = function () {
     function displayLoadingData(data) {
         var info = $("<div/>").append(data);
         $(".loading-data").append(info);
+        console.log(data);
     }
 
     function displayDownloadLink(link) {
@@ -399,7 +404,6 @@ SongPlaylist.prototype.addEventEmitter = function () {
 
     ee.on('finished', function () {
         console.log("The cursor has reached the end of the selection !");
-        songPlaylist.songModel.init();
         resetMute();
     });
 }

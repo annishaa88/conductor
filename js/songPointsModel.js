@@ -5,7 +5,9 @@ function SongPointsModel() {
         localStorage.pointscount = 0;
     }
 
-    $(".points").text(localStorage.pointscount);
+    this.init = function () {
+        $(".points").text(localStorage.pointscount);
+    }
 
     this.addPoints = function () {
         localStorage.pointscount = Number(localStorage.pointscount) + this.SUCCESS_POINTS;

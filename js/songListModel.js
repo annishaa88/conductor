@@ -16,7 +16,6 @@ function SongListModel(data) {
         $('[href=#songTab]').on('shown.bs.tab', function (e) {
             e.target // newly activated tab
             e.relatedTarget // previous active tab
-            imageMapInit();
 
             songPlaylist.init();
             songPlaylist.load(songJson);
